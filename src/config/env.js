@@ -6,8 +6,15 @@ export const env = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
 
   // Supabase credentials
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL || 'https://fkfvzxlabviobjjulefa.supabase.co',
+  supabasePublishableKey:
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    'sb_publishable_4Dz-Dxp0tei8Yop_1WJEaw_AjAWsFFV',
+  supabaseAnonKey:
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    'sb_publishable_4Dz-Dxp0tei8Yop_1WJEaw_AjAWsFFV',
 
   // Mapbox / Google Maps API token
   mapboxToken: import.meta.env.VITE_MAPBOX_TOKEN || '',

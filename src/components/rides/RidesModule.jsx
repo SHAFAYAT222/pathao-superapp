@@ -11,6 +11,8 @@ import { MOCK_CAPTAINS, DHAKA_LOCATIONS } from '../../data/mockData';
 import { MapPin, Navigation, ArrowLeft } from 'lucide-react';
 import { sounds } from '../../utils/soundEffects';
 import { ridesService, walletService } from '../../services';
+import { insertRideToSupabase } from '../../lib/supabaseClient';
+import { toast } from '../../utils/toast';
 
 export default function RidesModule({
   activeRide,
@@ -51,6 +53,30 @@ export default function RidesModule({
 
   const handleBookRide = async (bookingData) => {
     sounds.playTap();
+
+    // 1. Insert into Supabase 'rides' table
+    const supabaseResult = await insertRideToSupabase({
+      pickup: bookingData.pickup,
+      destination: bookingData.destination,
+      vehicle: bookingData.vehicle,
+      fare: bookingData.fare,
+      paymentMethod: 'Pathao Pay',
+      status: 'searching',
+    });
+
+    if (supabaseResult.success) {
+      toast.success(
+        `Ride request saved to Supabase (Fare: ৳${bookingData.fare})`,
+        { title: 'Supabase Connected' }
+      );
+    } else if (supabaseResult.error) {
+      toast.error(
+        `${supabaseResult.message || supabaseResult.error.message}`,
+        { title: 'Supabase Sync Notice' }
+      );
+    }
+
+    // 2. Set active ride state & call dispatch backend
     setActiveRide({
       status: 'searching',
       pickup: bookingData.pickup,
@@ -58,6 +84,7 @@ export default function RidesModule({
       vehicle: bookingData.vehicle,
       fare: bookingData.fare,
       captain: null,
+      id: supabaseResult?.data?.[0]?.id || null,
     });
 
     const newRide = await ridesService.requestRide({
@@ -71,7 +98,7 @@ export default function RidesModule({
     if (newRide?.id) {
       setActiveRide((prev) => ({
         ...prev,
-        id: newRide.id,
+        id: prev.id || newRide.id,
       }));
     }
   };

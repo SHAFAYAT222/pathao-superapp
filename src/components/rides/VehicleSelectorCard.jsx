@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { VEHICLE_OPTIONS, PROMO_CODES } from '../../data/mockData';
-import { Bike, Car, Shield, Sparkles, Tag, ChevronRight, Zap, Check } from 'lucide-react';
+import { Bike, Car, Shield, Sparkles, Tag, ChevronRight, Zap, Check, Loader2 } from 'lucide-react';
 import { sounds } from '../../utils/soundEffects';
 
 export default function VehicleSelectorCard({
@@ -18,6 +18,7 @@ export default function VehicleSelectorCard({
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate distance based on coordinate Euclidean delta
   const dx = (destination?.coords?.x || 440) - (pickup?.coords?.x || 380);
@@ -195,19 +196,32 @@ export default function VehicleSelectorCard({
       {/* Confirm Booking CTA */}
       <button
         type="button"
-        onClick={() => {
+        disabled={isSubmitting}
+        onClick={async () => {
           sounds.playTap();
+          setIsSubmitting(true);
           const selectedVehicle = VEHICLE_OPTIONS.find(v => v.id === selectedVehicleId) || VEHICLE_OPTIONS[0];
-          onBookRide({
-            vehicle: selectedVehicle,
-            fare: calculateFare(selectedVehicle),
-            pickup,
-            destination,
-          });
+          try {
+            await onBookRide({
+              vehicle: selectedVehicle,
+              fare: calculateFare(selectedVehicle),
+              pickup,
+              destination,
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
-        className="w-full py-3.5 rounded-2xl bg-pathao-red hover:bg-pathao-redDark text-white font-black text-sm tracking-wide shadow-glow-red flex items-center justify-center gap-2 active:scale-98 transition-all"
+        className="w-full py-3.5 rounded-2xl bg-pathao-red hover:bg-pathao-redDark disabled:opacity-75 disabled:cursor-not-allowed text-white font-black text-sm tracking-wide shadow-glow-red flex items-center justify-center gap-2 active:scale-98 transition-all"
       >
-        <span>CONFIRM & BOOK {selectedVehicleId === 'bike' ? 'PATHAO BIKE' : 'PATHAO CAR'}</span>
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>CONNECTING TO SUPABASE...</span>
+          </>
+        ) : (
+          <span>CONFIRM & BOOK {selectedVehicleId === 'bike' ? 'PATHAO BIKE' : 'PATHAO CAR'}</span>
+        )}
       </button>
     </div>
   );

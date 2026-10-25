@@ -19,6 +19,7 @@ import NotificationsDrawer from './components/common/NotificationsDrawer';
 import TopUpModal from './components/wallet/TopUpModal';
 import BkashPaymentModal from './components/wallet/BkashPaymentModal';
 import ProfileModal from './components/common/ProfileModal';
+import ToastContainer from './components/common/Toast';
 
 import { DHAKA_LOCATIONS } from './data/mockData';
 import { sounds } from './utils/soundEffects';
@@ -331,6 +332,9 @@ export default function App() {
         userProfile={userProfile}
         walletBalance={walletBalance}
       />
+
+      {/* Global Animated Toasts (Supabase feedback & Error Handling) */}
+      <ToastContainer />
     </MobileContainer>
   );
 }

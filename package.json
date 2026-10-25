@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "autoprefixer": "^10.6.1",
     "canvas-confetti": "^1.9.4",
     "cors": "^2.8.6",

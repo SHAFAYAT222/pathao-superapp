@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import BottomSheet from '../common/BottomSheet';
 import { PROMO_CODES } from '../../data/mockData';
-import { Trash2, Plus, Minus, Tag, Check, ShieldCheck, ArrowRight, Utensils } from 'lucide-react';
+import { Trash2, Plus, Minus, Tag, Check, ShieldCheck, ArrowRight, Utensils, Loader2 } from 'lucide-react';
 import { sounds } from '../../utils/soundEffects';
 
 export default function FoodCheckoutSheet({
@@ -18,6 +18,7 @@ export default function FoodCheckoutSheet({
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('wallet'); // 'wallet' | 'bkash' | 'cod'
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
@@ -45,38 +46,43 @@ export default function FoodCheckoutSheet({
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     sounds.playTap();
-    if (paymentMethod === 'bkash') {
-      onTriggerBkash({
-        amount: grandTotal,
-        purpose: 'Pathao Food Delivery Order',
-        onSuccess: () => {
-          onPlaceOrder({
-            items: cartItems,
-            subtotal,
-            vat,
-            deliveryFee: effectiveDelivery,
-            discount: totalDiscount,
-            grandTotal,
-            paymentMethod: 'bKash',
-            restaurant: cartItems[0]?.restaurant,
-          });
-          onClose();
-        }
-      });
-    } else {
-      onPlaceOrder({
-        items: cartItems,
-        subtotal,
-        vat,
-        deliveryFee: effectiveDelivery,
-        discount: totalDiscount,
-        grandTotal,
-        paymentMethod: paymentMethod === 'wallet' ? 'Pathao Pay' : 'Cash on Delivery',
-        restaurant: cartItems[0]?.restaurant,
-      });
-      onClose();
+    setIsSubmitting(true);
+    try {
+      if (paymentMethod === 'bkash') {
+        onTriggerBkash({
+          amount: grandTotal,
+          purpose: 'Pathao Food Delivery Order',
+          onSuccess: async () => {
+            await onPlaceOrder({
+              items: cartItems,
+              subtotal,
+              vat,
+              deliveryFee: effectiveDelivery,
+              discount: totalDiscount,
+              grandTotal,
+              paymentMethod: 'bKash',
+              restaurant: cartItems[0]?.restaurant,
+            });
+            onClose();
+          }
+        });
+      } else {
+        await onPlaceOrder({
+          items: cartItems,
+          subtotal,
+          vat,
+          deliveryFee: effectiveDelivery,
+          discount: totalDiscount,
+          grandTotal,
+          paymentMethod: paymentMethod === 'wallet' ? 'Pathao Pay' : 'Cash on Delivery',
+          restaurant: cartItems[0]?.restaurant,
+        });
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -294,11 +300,21 @@ export default function FoodCheckoutSheet({
             {/* Place Order Action Button */}
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={handleCheckout}
-              className="w-full py-3.5 rounded-2xl bg-pathao-red hover:bg-pathao-redDark text-white font-black text-sm tracking-wide shadow-glow-red flex items-center justify-center gap-2 active:scale-98 transition-all"
+              className="w-full py-3.5 rounded-2xl bg-pathao-red hover:bg-pathao-redDark disabled:opacity-75 disabled:cursor-not-allowed text-white font-black text-sm tracking-wide shadow-glow-red flex items-center justify-center gap-2 active:scale-98 transition-all"
             >
-              <span>CONFIRM ORDER (৳{grandTotal})</span>
-              <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>SAVING ORDER TO SUPABASE...</span>
+                </>
+              ) : (
+                <>
+                  <span>CONFIRM ORDER (৳{grandTotal})</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </>
         )}
