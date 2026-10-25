@@ -1,0 +1,61 @@
+name: CI/CD Production Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-build:
+    name: Test, Lint & Production Build
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      VITE_API_BASE_URL: https://api.pathao-superapp.com
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Clean Dependencies
+        run: npm ci
+
+      - name: 🔍 Run Linter (oxlint)
+        run: npm run lint
+
+      - name: 🧪 Run Automated API & Service Tests
+        run: npm test
+
+      - name: 🏗️ Build Production Bundle (Vite)
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: 🛡️ Validate Build Integrity
+        run: |
+          test -f dist/index.html || { echo "dist/index.html is missing!"; exit 1; }
+          test -d dist/assets || { echo "dist/assets is missing!"; exit 1; }
+          echo "Production bundle validation passed successfully."
+
+      - name: 🚀 Upload Production Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pathao-production-dist
+          path: dist/
+          retention-days: 7
