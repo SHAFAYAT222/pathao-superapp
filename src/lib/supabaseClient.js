@@ -1,13 +1,20 @@
 // Supabase Client & Operations for Pathao Super-App
 import { createClient } from '@supabase/supabase-js';
 
-// Read variables from Vite environment with fallbacks
+// Read variables safely from Vite import.meta.env or Node process.env with fallbacks
+const metaEnv =
+  typeof import.meta !== 'undefined' && import.meta.env
+    ? import.meta.env
+    : typeof process !== 'undefined' && process.env
+    ? process.env
+    : {};
+
 const supabaseUrl =
-  import.meta.env.VITE_SUPABASE_URL || 'https://fkfvzxlabviobjjulefa.supabase.co';
+  metaEnv.VITE_SUPABASE_URL || 'https://fkfvzxlabviobjjulefa.supabase.co';
 
 const supabaseKey =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  metaEnv.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  metaEnv.VITE_SUPABASE_ANON_KEY ||
   'sb_publishable_4Dz-Dxp0tei8Yop_1WJEaw_AjAWsFFV';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
